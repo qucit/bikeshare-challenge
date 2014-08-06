@@ -58,10 +58,18 @@ data_weather.index = date_time
 data_weather = data_weather.sort_index()
 data_weather_comp = data_weather.asfreq('1h',method = 'pad')
 
+"""histogramme """
+### add .map(lambda x: round(x)) for variables not precipitation_in_mmh
+pluie=data_weather_comp['precipitation_in_mmh'].tolist()
+unique_pluie=np.unique(pluie)
+plt.hist(pluie,unique_pluie)
+plt.show()
+
+
 
 """ create a data_pluie_incr containing varaible weather(pluie,temperature...), increment, id_station and hour for all stations"""
-### we have theses variables og weather : visibility_in_km, temperature_in_celsius, humidity_in_pct, \
-### humidex, windchill_in_celsius,wind_in_kmh,pressure_in_hpa
+### we have theses variables og weather : precipitation_in_mmh,visibility_in_km, temperature_in_celsius, humidity_in_pct, \
+### humidex, windchill_in_celsius,wind_in_kmh,pressure_in_hpa, gust_in_kmh
 
 t1 = time.clock()
 increment_station = []
@@ -96,8 +104,10 @@ print t2-t1
 
 data_pluie_incr.groupby('pluie').mean()
 data_pluie_incr.groupby('pluie').mean()['increment'].plot()
-plt.ylabel('Increment_moyen')
+plt.ylabel('Increment_moyen_abs')
+plt.xlabel('precipitation_in_mmh')
 plt.title('incr_moyen_pluie_all_stations')
+
 plt.show()
 
 
@@ -106,24 +116,45 @@ mean_by_station_pluie = data_pluie_incr.groupby(['station_id','pluie']).mean()
 
 
 ### desine graphes with the points reals and fittedvalues from regression
-total_stations = 140
+total_stations = 139
 for i in range(1,total_stations+1):
     data_mean_by_station = mean_by_station_pluie.query('station_id=='+str(i))
     I_mean_by_station=data_mean_by_station['increment']
-    P_by_station=I_mean_by_station.index.get_level_values('pluie').tolist() 
+    P_by_station=I_mean_by_station.index.get_level_values('pluie')
     model=sm.OLS(I_mean_by_station,sm.add_constant(P_by_station))
     fit=model.fit()
     fittedvalues=fit.fittedvalues
     plt.figure()
     plt.plot(P_by_station,I_mean_by_station,'*',label="data")
     plt.plot(P_by_station,fittedvalues,'-',label="Linear_Regression")
-    plt.xlim([-0.2,max(P_by_station)+0.2])
+    plt.xlim([min(P_by_station)-0.2,max(P_by_station)+0.2])
     plt.ylim([min(min(fittedvalues),min(I_mean_by_station))-0.1,max(max(fittedvalues),max(I_mean_by_station))+0.1])
     plt.xlabel('precipitation_in_mmh')
-    plt.ylabel('Increment_moyen')
+    plt.ylabel('Increment_moyen_abs')
     plt.legend( loc='best', numpoints = 1 )
     plt.savefig('/Users/chenlong/projet/graphes/graphes for increment_moyen/LR_Incr_mean_pluie/LR_station_' + str(i) +'.png')
 
+
+
+""" for variable wind and gust """
+total_stations = 139
+for i in range(1,total_stations+1):
+    data_mean_by_station = mean_by_station_pluie.query('station_id=='+str(i))
+    I_mean_by_station=data_mean_by_station['increment']
+    P_by_station=I_mean_by_station.index.get_level_values('pluie')
+    x=np.column_stack((P_by_station, P_by_station**2))
+    model=sm.OLS(I_mean_by_station,sm.add_constant(x))
+    fit=model.fit()
+    fittedvalues=fit.fittedvalues
+    plt.figure()
+    plt.plot(P_by_station,I_mean_by_station,'*',label="data")
+    plt.plot(P_by_station,fittedvalues,'-',label="Linear_Regression")
+    plt.xlim([min(P_by_station)-0.2,max(P_by_station)+0.2])
+    plt.ylim([min(min(fittedvalues),min(I_mean_by_station))-0.1,max(max(fittedvalues),max(I_mean_by_station))+0.1])
+    plt.xlabel('wind_in_kmh')
+    plt.ylabel('Increment_moyen_abs')
+    plt.legend( loc='best', numpoints = 1 )
+    plt.savefig('/Users/chenlong/projet/graphes/graphes for increment_moyen/LR_Incr_mean_wind/LR_station_' + str(i) +'.png')
 
 
 

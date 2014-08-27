@@ -5,11 +5,10 @@
 
 
 
-#Uploading data
+####Uploading data####
 
 import os
 import pandas as pd
-from StringIO import StringIO
 import csv
 
 
@@ -18,11 +17,25 @@ os.chdir("c:\\users\\ALOUINI Yassine\\Documents\\GitHub\\bikeshare-challenge\\bi
 
 
 
-bikeStationsData = pd.read_csv("stations.csv", index_col=["station_id"])# The stations data (number of bike slots for different stations)
+bikeStationsData = pd.read_csv("stations.csv", index_col=["station_id"],  usecols=["station_id","name", "total_slots"])# The stations data (number of bike slots for different stations)
 
 
-#Data Viz for the bike stations data (to be done in the near future)
+#Notice that by changing the usecols in the stations.csv file, one can also perform data vizualization for the stations in Bordeaux map
+
+
+snapshots = pd.read_csv("snapshots-bdx.csv",  index_col=["station_id","heure"], usecols=["date", "heure","station_id","status", "bikes", "slots"])#change this variable name
+
+
+currentBikes = pd.read_csv("snapshots-actuelle.csv", index_col=["station_id"], usecols=["station_id","bikes"])#change the$is variable name
 
 
 
 
+####Data Viz####
+
+
+bikeStationsDataViz = pd.read_csv("stations.csv", index_col=["station_id"], usecols=["station_id","name", "total_slots", "latitude","longitude"])
+
+
+
+#To be continued of course
